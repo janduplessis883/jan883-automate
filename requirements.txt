@@ -1,0 +1,17 @@
+# Email automation toolkit dependencies
+chilkat
+# Date/time parsing
+python-dateutil==2.8.2
+
+# Notion API client
+notion-client==2.2.1
+
+# Data manipulation
+pandas==2.1.4
+
+# HTTP requests
+requests==2.31.0
+
+# iCloud email processing (Chilkat SDK)
+# Note: chilkat requires manual installation from https://www.chilkatsoft.com/
+# chilkat==9.5.0.94

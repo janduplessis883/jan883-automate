@@ -7,7 +7,7 @@ from dateutil import parser
 from utils.ollama import ask_ollama
 
 # Initialize NotionHelper
-notion_helper = NotionHelper()
+notion_helper = NotionHelper(os.getenv("NOTION_API_KEY"))
 notion_database_id = "20efdfd68a97804e8c50ff1168adcf27"
 
 # Step 1: Connect to iCloud Mail using Chilkat
