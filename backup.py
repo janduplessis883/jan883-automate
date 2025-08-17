@@ -75,6 +75,19 @@ summary_table.add_column("Source", style="magenta")
 summary_table.add_column("Status", justify="center")
 summary_table.add_column("Details", style="dim")
 
+# Validate backup configurations before starting
+console.print("[bold yellow]🔍 Validating backup configurations...[/bold yellow]")
+for i, config in enumerate(backup_configs, 1):
+    source = config["source"]
+    if not os.path.exists(source):
+        console.print(f"[bold red]❌ Warning:[/bold red] Source folder {source} does not exist")
+    elif not os.access(source, os.R_OK):
+        console.print(f"[bold red]❌ Warning:[/bold red] No read permission for {source}")
+    else:
+        console.print(f"[green]✅[/green] Source {i}: {source}")
+
+console.print()
+
 # Process each backup configuration
 for i, config in enumerate(track(backup_configs, description="Processing backups..."), 1):
     source_folder = config["source"]
