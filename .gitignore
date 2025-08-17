@@ -1,0 +1,13 @@
+action_emails.txt
+.DS_Store
+*.log
+*.tmp
+*.bak
+.python_version
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.egg
