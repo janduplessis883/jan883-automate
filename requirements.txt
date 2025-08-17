@@ -12,6 +12,9 @@ pandas==2.1.4
 # HTTP requests
 requests==2.31.0
 
+# Rich console output
+rich==13.7.0
+
 # iCloud email processing (Chilkat SDK)
 # Note: chilkat requires manual installation from https://www.chilkatsoft.com/
 # chilkat==9.5.0.94

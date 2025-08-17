@@ -1,6 +1,10 @@
 import os
 import shutil
 from datetime import datetime
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.progress import track
 
 # Define multiple source folders and their corresponding backup destinations
 backup_configs = [
@@ -42,15 +46,37 @@ def should_skip(path, names):
     """Function to determine which files/folders to skip"""
     return [name for name in names if name in skip_items]
 
+# Initialize Rich console
+console = Console()
+
 # Create a single timestamp for all backups
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-print(f"Starting backup process at {timestamp}")
-print(f"Skipping: {', '.join(sorted(skip_items))}")
-print("-" * 50)
+# Display startup information with Rich
+console.print(Panel.fit(
+    f"[bold cyan]🔄 Email Automation Toolkit - Backup System[/bold cyan]\n"
+    f"[yellow]Started at: {timestamp}[/yellow]",
+    title="Backup Process",
+    border_style="blue"
+))
+
+# Display skip items in a table
+skip_table = Table(title="Files/Folders to Skip", show_header=False)
+skip_table.add_column("Item", style="red")
+for item in sorted(skip_items):
+    skip_table.add_row(f"🚫 {item}")
+console.print(skip_table)
+console.print()
+
+# Create backup summary table
+summary_table = Table(title="Backup Summary")
+summary_table.add_column("#", style="cyan", width=3)
+summary_table.add_column("Source", style="magenta")
+summary_table.add_column("Status", justify="center")
+summary_table.add_column("Details", style="dim")
 
 # Process each backup configuration
-for i, config in enumerate(backup_configs, 1):
+for i, config in enumerate(track(backup_configs, description="Processing backups..."), 1):
     source_folder = config["source"]
     backup_folder = config["destination"]
 
@@ -59,27 +85,42 @@ for i, config in enumerate(backup_configs, 1):
     backup_path = os.path.join(backup_folder, f"{source_name}_backup_{timestamp}")
 
     try:
-        print(f"[{i}/{len(backup_configs)}] Starting backup from {source_folder}")
-        print(f"[{i}/{len(backup_configs)}] Backup destination: {backup_path}")
-
+        console.print(f"\n[bold blue]Backup {i}/{len(backup_configs)}:[/bold blue] [cyan]{source_folder}[/cyan]")
+        console.print(f"[dim]→ Destination: {backup_path}[/dim]")
+        
         # Ensure the parent backup folder exists
         os.makedirs(backup_folder, exist_ok=True)
 
         # Copy entire directory tree recursively, skipping specified items
         # symlinks=False prevents copying broken symlinks that cause errors
-        shutil.copytree(source_folder, backup_path, ignore=should_skip, symlinks=False)
+        with console.status(f"[bold green]Copying files from {os.path.basename(source_folder)}..."):
+            shutil.copytree(source_folder, backup_path, ignore=should_skip, symlinks=False)
 
-        print(f"[{i}/{len(backup_configs)}] ✅ Backup completed successfully at {backup_path}")
+        console.print(f"[bold green]✅ Backup completed successfully![/bold green]")
+        summary_table.add_row(str(i), source_name, "[green]✅ Success[/green]", backup_path)
 
     except FileExistsError:
-        print(f"[{i}/{len(backup_configs)}] ❌ Error: Backup destination {backup_path} already exists")
+        error_msg = "Backup destination already exists"
+        console.print(f"[bold red]❌ Error:[/bold red] {error_msg}")
+        summary_table.add_row(str(i), source_name, "[red]❌ Failed[/red]", error_msg)
     except PermissionError:
-        print(f"[{i}/{len(backup_configs)}] ❌ Error: Permission denied. Check access to source or destination folders")
+        error_msg = "Permission denied - check folder access"
+        console.print(f"[bold red]❌ Error:[/bold red] {error_msg}")
+        summary_table.add_row(str(i), source_name, "[red]❌ Failed[/red]", error_msg)
     except FileNotFoundError:
-        print(f"[{i}/{len(backup_configs)}] ❌ Error: Source folder {source_folder} not found")
+        error_msg = "Source folder not found"
+        console.print(f"[bold red]❌ Error:[/bold red] {error_msg}")
+        summary_table.add_row(str(i), source_name, "[red]❌ Failed[/red]", error_msg)
     except Exception as e:
-        print(f"[{i}/{len(backup_configs)}] ❌ Backup failed: {e}")
+        error_msg = str(e)
+        console.print(f"[bold red]❌ Backup failed:[/bold red] {error_msg}")
+        summary_table.add_row(str(i), source_name, "[red]❌ Failed[/red]", error_msg)
 
-    print("-" * 50)
-
-print("All backup operations completed!")
+# Display final summary
+console.print("\n")
+console.print(summary_table)
+console.print(Panel.fit(
+    "[bold green]🎉 All backup operations completed![/bold green]",
+    title="Process Complete",
+    border_style="green"
+))
